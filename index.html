@@ -132,12 +132,13 @@
       padding-bottom: calc(10px + var(--safe-b));
       background: var(--surf);
       border-top: 1px solid var(--border);
-      display: flex; gap: 8px;
+      display: flex; gap: 7px;
     }
     .nav-btn {
-      flex: 1; padding: 13px; border: none;
-      border-radius: 12px; font-size: 15px; font-weight: 700;
+      flex: 1; padding: 11px 6px; border: none;
+      border-radius: 12px; font-size: 13px; font-weight: 700;
       cursor: pointer; transition: background .15s, color .15s;
+      line-height: 1.25; text-align: center;
     }
     .nav-btn.on  { background: var(--acc); color: #fff; }
     .nav-btn.off { background: var(--border); color: var(--s); }
@@ -152,8 +153,9 @@
   </div>
   <div class="content" id="content"></div>
   <div class="nav">
-    <button class="nav-btn on"  id="btn-d" onclick="go('today')">Danas</button>
-    <button class="nav-btn off" id="btn-w" onclick="go('week')">Tjedan</button>
+    <button class="nav-btn on"  id="btn-d"  onclick="go('today')">Danas</button>
+    <button class="nav-btn off" id="btn-w"  onclick="go('week')">Ovaj tjedan</button>
+    <button class="nav-btn off" id="btn-nw" onclick="go('nextweek')">Sljedeći tjedan</button>
   </div>
 </div>
 
@@ -329,21 +331,23 @@ function renderToday(now) {
   return html;
 }
 
-function renderWeek(now) {
-  const wt  = weekType(now);
-  const mon = mondayOf(now);
+// targetDate = the date that defines the week to show
+// todayDate  = today, used only for highlighting current day
+function renderWeek(targetDate, todayDate) {
+  const wt  = weekType(targetDate);
+  const mon = mondayOf(targetDate);
 
   if (!wt) {
     return `<div class="empty">
       <div class="empty-icon">🏖️</div>
       <div class="empty-title">Školski odmor</div>
-      <div class="empty-sub">Ovaj tjedan nema nastave.</div>
+      <div class="empty-sub">Nema nastave taj tjedan.</div>
     </div>`;
   }
 
-  const monDt = new Date(mon + 'T00:00:00');
-  const friDt = dayDate(mon, 5);
-  const todayISO = isoDate(now);
+  const monDt   = new Date(mon + 'T00:00:00');
+  const friDt   = dayDate(mon, 5);
+  const todayISO = isoDate(todayDate);
 
   let html = `<div class="w-hdr">
     ${shortDt(monDt)} – ${shortDt(friDt)} ${friDt.getFullYear()} &nbsp;·&nbsp; Tjedan ${wt}
@@ -387,8 +391,9 @@ let view = localStorage.getItem('view') || 'today';
 function go(v) {
   view = v;
   localStorage.setItem('view', v);
-  document.getElementById('btn-d').className = 'nav-btn ' + (v === 'today' ? 'on' : 'off');
-  document.getElementById('btn-w').className = 'nav-btn ' + (v === 'week'  ? 'on' : 'off');
+  document.getElementById('btn-d') .className = 'nav-btn ' + (v === 'today'    ? 'on' : 'off');
+  document.getElementById('btn-w') .className = 'nav-btn ' + (v === 'week'     ? 'on' : 'off');
+  document.getElementById('btn-nw').className = 'nav-btn ' + (v === 'nextweek' ? 'on' : 'off');
   paint();
   document.getElementById('content').scrollTop = 0;
 }
@@ -399,8 +404,16 @@ function paint() {
   const pill = document.getElementById('pill');
   if (wt) { pill.textContent = `Tjedan ${wt}`; pill.classList.remove('off'); }
   else    { pill.textContent = 'Odmor';          pill.classList.add('off');    }
-  document.getElementById('content').innerHTML =
-    view === 'today' ? renderToday(now) : renderWeek(now);
+
+  const nextWeek = new Date(now);
+  nextWeek.setDate(now.getDate() + 7);
+
+  let html;
+  if (view === 'today')    html = renderToday(now);
+  else if (view === 'week') html = renderWeek(now, now);
+  else                      html = renderWeek(nextWeek, now);
+
+  document.getElementById('content').innerHTML = html;
 }
 
 // ═══════════════════════════════════════════════════════
