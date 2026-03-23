@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <title>Raspored</title>
+  <style>
+    :root {
+      --bg:      #f1f5f9;
+      --surf:    #ffffff;
+      --p:       #0f172a;
+      --s:       #64748b;
+      --border:  #e2e8f0;
+      --acc:     #2563eb;
+      --acc2:    #1d4ed8;
+      --safe-b:  env(safe-area-inset-bottom, 0px);
+      --safe-t:  env(safe-area-inset-top, 0px);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:     #0f172a;
+        --surf:   #1e293b;
+        --p:      #f1f5f9;
+        --s:      #94a3b8;
+        --border: #334155;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--p);
+    }
+
+    #app {
+      display: flex; flex-direction: column;
+      height: 100%; max-width: 520px; margin: 0 auto;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    .hdr {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px;
+      padding-top: calc(12px + var(--safe-t));
+      background: var(--surf);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .hdr-title { font-size: 17px; font-weight: 800; flex: 1; }
+    .week-pill {
+      font-size: 12px; font-weight: 700;
+      padding: 4px 11px; border-radius: 20px;
+      background: var(--acc); color: #fff;
+      letter-spacing: 0.3px; white-space: nowrap;
+    }
+    .week-pill.off { background: var(--s); }
+    #install-btn {
+      display: none;
+      font-size: 12px; font-weight: 700;
+      padding: 5px 11px; border-radius: 20px;
+      border: none; cursor: pointer;
+      background: #dcfce7; color: #166534;
+    }
+
+    /* ── Content ────────────────────────────────── */
+    .content {
+      flex: 1; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 20px 16px;
+      padding-bottom: calc(76px + var(--safe-b));
+    }
+
+    /* ── Today ──────────────────────────────────── */
+    .t-meta { font-size: 12px; font-weight: 600; color: var(--s); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 3px; }
+    .t-day  { font-size: 34px; font-weight: 800; line-height: 1.1; margin-bottom: 22px; }
+
+    /* ── Activity card ──────────────────────────── */
+    .card {
+      display: flex; background: var(--surf);
+      border-radius: 15px; overflow: hidden;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07);
+    }
+    .card-bar { width: 6px; flex-shrink: 0; }
+    .card-body { padding: 13px 14px; flex: 1; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .card-left {}
+    .card-name { font-size: 17px; font-weight: 700; }
+    .card-time { font-size: 14px; color: var(--s); margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .card-time.solo { font-size: 17px; font-weight: 700; color: var(--p); margin-top: 0; }
+    .opt-badge {
+      flex-shrink: 0;
+      font-size: 10px; font-weight: 700;
+      padding: 3px 7px; border-radius: 6px;
+      background: #fef3c7; color: #92400e;
+      letter-spacing: 0.2px; white-space: nowrap;
+    }
+    @media (prefers-color-scheme: dark) {
+      .opt-badge { background: #451a03; color: #fde68a; }
+    }
+
+    /* ── Empty ──────────────────────────────────── */
+    .empty {
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      padding: 56px 20px; color: var(--s);
+    }
+    .empty-icon  { font-size: 52px; margin-bottom: 14px; }
+    .empty-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: var(--p); }
+    .empty-sub   { font-size: 15px; }
+
+    /* ── Week view ──────────────────────────────── */
+    .w-hdr { font-size: 12px; font-weight: 600; color: var(--s); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 18px; }
+    .wday  { margin-bottom: 20px; }
+    .wday-lbl { display: flex; align-items: baseline; gap: 7px; margin-bottom: 7px; }
+    .wday-name { font-size: 15px; font-weight: 700; }
+    .wday-name.hl { color: var(--acc); }
+    .wday-date { font-size: 13px; color: var(--s); }
+    .wday-free { font-size: 14px; color: var(--s); padding-left: 2px; }
+
+    /* ── Bottom nav ─────────────────────────────── */
+    .nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 520px;
+      padding: 10px 16px;
+      padding-bottom: calc(10px + var(--safe-b));
+      background: var(--surf);
+      border-top: 1px solid var(--border);
+      display: flex; gap: 8px;
+    }
+    .nav-btn {
+      flex: 1; padding: 13px; border: none;
+      border-radius: 12px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: background .15s, color .15s;
+    }
+    .nav-btn.on  { background: var(--acc); color: #fff; }
+    .nav-btn.off { background: var(--border); color: var(--s); }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-title">📅 Raspored</div>
+    <div class="week-pill" id="pill">—</div>
+    <button id="install-btn" onclick="installPWA()">⬇ Instaliraj</button>
+  </div>
+  <div class="content" id="content"></div>
+  <div class="nav">
+    <button class="nav-btn on"  id="btn-d" onclick="go('today')">Danas</button>
+    <button class="nav-btn off" id="btn-w" onclick="go('week')">Tjedan</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  SCHEDULE DATA
+//  ─────────────────────────────────────────────────────
+//  Each entry covers weeks where this activity is active.
+//  "from" / "to" refer to the MONDAY of the school week
+//  (ISO date strings). to:null = recurs to end of year.
+//
+//  How to read the spreadsheet merged cells:
+//    Row N  → activity NAME  (e.g. "Gitara")
+//    Row N+1 → activity TIME  (e.g. "16:45-17:45")
+//  Both rows belong to the same ongoing activity.
+//
+//  Orange background in the original spreadsheet = opt:true
+// ═══════════════════════════════════════════════════════
+
+const WEEK_A = new Set([
+  '2025-09-08','2025-09-22','2025-10-06','2025-10-20',
+  '2025-11-03','2025-11-17','2025-12-01','2025-12-15',
+  '2026-01-26','2026-02-09','2026-02-23','2026-03-09',
+  '2026-03-23','2026-04-06','2026-04-20','2026-05-04',
+  '2026-05-18','2026-06-01','2026-06-15'
+]);
+const WEEK_B = new Set([
+  '2025-09-15','2025-09-29','2025-10-13','2025-10-27',
+  '2025-11-10','2025-11-24','2025-12-08','2025-12-22',
+  '2026-01-19','2026-02-02','2026-02-16','2026-03-02',
+  '2026-03-16','2026-03-30','2026-04-13','2026-04-27',
+  '2026-05-11','2026-05-25','2026-06-08','2026-06-22'
+]);
+
+// day: 1=Pon  2=Uto  3=Sri  4=Čet  5=Pet  6=Sub
+const ACTS = [
+
+  // ══ TJEDAN A ════════════════════════════════════════
+  // Gitara – Sri 16:45–17:45  (starts 22.09.2025)
+  { type:'A', from:'2025-09-22', to:null,         day:3, name:'Gitara',    time:'16:45–17:45', color:'#10b981', opt:false },
+
+  // Solfeggio – Sub 11:00–12:00  (starts 22.09.2025)
+  { type:'A', from:'2025-09-22', to:null,         day:6, name:'Solfeggio', time:'11:00–12:00', color:'#8b5cf6', opt:false },
+
+  // Solfeggio – Pon 17:30–18:30  (starts 06.10.2025)
+  { type:'A', from:'2025-10-06', to:null,         day:1, name:'Solfeggio', time:'17:30–18:30', color:'#8b5cf6', opt:false },
+
+  // Ninđe – Čet 18:00–19:00  (20.10 – 03.11, NEOBAVEZNO)
+  { type:'A', from:'2025-10-20', to:'2025-11-03', day:4, name:'Ninđe',     time:'18:00–19:00', color:'#f59e0b', opt:true  },
+
+  // Košarka – Pon 19:10–20:30  (starts 15.12, NEOBAVEZNO)
+  { type:'A', from:'2025-12-15', to:null,         day:1, name:'Košarka',   time:'19:10–20:30', color:'#f97316', opt:true  },
+  // Košarka – Sri 19:10–20:30  (starts 15.12)
+  { type:'A', from:'2025-12-15', to:null,         day:3, name:'Košarka',   time:'19:10–20:30', color:'#f97316', opt:false },
+  // Košarka – Pet 19:10–20:30  (starts 15.12)
+  { type:'A', from:'2025-12-15', to:null,         day:5, name:'Košarka',   time:'19:10–20:30', color:'#f97316', opt:false },
+
+  // ══ TJEDAN B ════════════════════════════════════════
+  // Solfeggio – Pon 17:15–18:15  (starts 29.09.2025)
+  { type:'B', from:'2025-09-29', to:null,         day:1, name:'Solfeggio', time:'17:15–18:15', color:'#8b5cf6', opt:false },
+
+  // Gitara – Pon 18:15–18:45  (starts 27.10.2025, after Solfeggio)
+  { type:'B', from:'2025-10-27', to:null,         day:1, name:'Gitara',    time:'18:15–18:45', color:'#10b981', opt:false },
+
+  // Gitara – Čet 18:15–18:45  (starts 27.10.2025)
+  { type:'B', from:'2025-10-27', to:null,         day:4, name:'Gitara',    time:'18:15–18:45', color:'#10b981', opt:false },
+
+  // Solfeggio – Čet 18:45–19:45  (starts 24.11.2025, after Gitara)
+  { type:'B', from:'2025-11-24', to:null,         day:4, name:'Solfeggio', time:'18:45–19:45', color:'#8b5cf6', opt:false },
+
+  // Košarka – Sri 19:10–20:30  (starts 19.01.2026)
+  { type:'B', from:'2026-01-19', to:null,         day:3, name:'Košarka',   time:'19:10–20:30', color:'#f97316', opt:false },
+  // Košarka – Pet 19:10–20:30  (starts 19.01.2026)
+  { type:'B', from:'2026-01-19', to:null,         day:5, name:'Košarka',   time:'19:10–20:30', color:'#f97316', opt:false },
+
+];
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+
+function isoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function mondayOf(date) {
+  const d = new Date(date); d.setHours(0,0,0,0);
+  const dow = d.getDay();
+  d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+  return isoDate(d);
+}
+function weekType(date) {
+  const m = mondayOf(date);
+  return WEEK_A.has(m) ? 'A' : WEEK_B.has(m) ? 'B' : null;
+}
+function actsFor(monISO, wtype, dayNum) {
+  if (!wtype) return [];
+  return ACTS.filter(a =>
+    a.type === wtype &&
+    monISO >= a.from &&
+    (a.to === null || monISO <= a.to) &&
+    a.day === dayNum
+  );
+}
+function dayDate(monISO, d) {  // d: 1=Mon
+  const dt = new Date(monISO + 'T00:00:00');
+  dt.setDate(dt.getDate() + d - 1);
+  return dt;
+}
+
+// ═══════════════════════════════════════════════════════
+//  LOCALISATION
+// ═══════════════════════════════════════════════════════
+
+const DAYS   = ['','Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak','Subota','Nedjelja'];
+const MONTHS = ['','siječnja','veljače','ožujka','travnja','svibnja','lipnja',
+                'srpnja','kolovoza','rujna','listopada','studenog','prosinca'];
+const fullDt = d => `${d.getDate()}. ${MONTHS[d.getMonth()+1]} ${d.getFullYear()}.`;
+const shortDt = d => `${d.getDate()}.${d.getMonth()+1}.`;
+
+// ═══════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════
+
+function cardHTML(a) {
+  const hasName = a.name && a.name.trim() !== '';
+  return `
+    <div class="card">
+      <div class="card-bar" style="background:${a.color}"></div>
+      <div class="card-body">
+        <div class="card-left">
+          ${hasName ? `<div class="card-name">${a.name}</div>` : ''}
+          ${a.time ? `<div class="card-time${hasName ? '' : ' solo'}">${a.time}</div>` : ''}
+        </div>
+        ${a.opt ? '<span class="opt-badge">neobavezno</span>' : ''}
+      </div>
+    </div>`;
+}
+
+function renderToday(now) {
+  const wt  = weekType(now);
+  const mon = mondayOf(now);
+  const dow = now.getDay();              // 0=Sun
+  const day = dow === 0 ? 7 : dow;      // 1=Mon…6=Sat, 7=Sun
+
+  let html = `
+    <div class="t-meta">${fullDt(now)}</div>
+    <div class="t-day">${DAYS[day] ?? 'Dan'}</div>`;
+
+  if (day === 7) {
+    html += `<div class="empty">
+      <div class="empty-icon">🌟</div>
+      <div class="empty-title">Nedjelja</div>
+      <div class="empty-sub">Uživajte u slobodnom danu.</div>
+    </div>`;
+  } else if (!wt) {
+    html += `<div class="empty">
+      <div class="empty-icon">🏖️</div>
+      <div class="empty-title">Školski odmor</div>
+      <div class="empty-sub">Ovaj tjedan nema nastave.</div>
+    </div>`;
+  } else {
+    const acts = actsFor(mon, wt, day);
+    if (acts.length === 0) {
+      html += `<div class="empty">
+        <div class="empty-icon">😊</div>
+        <div class="empty-title">Slobodan dan</div>
+        <div class="empty-sub">Nema aktivnosti danas.</div>
+      </div>`;
+    } else {
+      acts.forEach(a => { html += cardHTML(a); });
+    }
+  }
+  return html;
+}
+
+function renderWeek(now) {
+  const wt  = weekType(now);
+  const mon = mondayOf(now);
+
+  if (!wt) {
+    return `<div class="empty">
+      <div class="empty-icon">🏖️</div>
+      <div class="empty-title">Školski odmor</div>
+      <div class="empty-sub">Ovaj tjedan nema nastave.</div>
+    </div>`;
+  }
+
+  const monDt = new Date(mon + 'T00:00:00');
+  const friDt = dayDate(mon, 5);
+  const todayISO = isoDate(now);
+
+  let html = `<div class="w-hdr">
+    ${shortDt(monDt)} – ${shortDt(friDt)} ${friDt.getFullYear()} &nbsp;·&nbsp; Tjedan ${wt}
+  </div>`;
+
+  for (let d = 1; d <= 5; d++) {
+    const dt      = dayDate(mon, d);
+    const isToday = isoDate(dt) === todayISO;
+    const acts    = actsFor(mon, wt, d);
+    html += `<div class="wday">
+      <div class="wday-lbl">
+        <span class="wday-name${isToday ? ' hl' : ''}">${DAYS[d]}</span>
+        <span class="wday-date">${shortDt(dt)}</span>
+      </div>
+      ${acts.length ? acts.map(cardHTML).join('') : '<div class="wday-free">Slobodan dan</div>'}
+    </div>`;
+  }
+
+  // Saturday — only if activities exist
+  const satActs = actsFor(mon, wt, 6);
+  if (satActs.length > 0) {
+    const satDt = dayDate(mon, 6);
+    html += `<div class="wday">
+      <div class="wday-lbl">
+        <span class="wday-name${isoDate(satDt) === todayISO ? ' hl' : ''}">Subota</span>
+        <span class="wday-date">${shortDt(satDt)}</span>
+      </div>
+      ${satActs.map(cardHTML).join('')}
+    </div>`;
+  }
+
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════
+//  APP STATE
+// ═══════════════════════════════════════════════════════
+
+let view = localStorage.getItem('view') || 'today';
+
+function go(v) {
+  view = v;
+  localStorage.setItem('view', v);
+  document.getElementById('btn-d').className = 'nav-btn ' + (v === 'today' ? 'on' : 'off');
+  document.getElementById('btn-w').className = 'nav-btn ' + (v === 'week'  ? 'on' : 'off');
+  paint();
+  document.getElementById('content').scrollTop = 0;
+}
+
+function paint() {
+  const now = new Date();
+  const wt  = weekType(now);
+  const pill = document.getElementById('pill');
+  if (wt) { pill.textContent = `Tjedan ${wt}`; pill.classList.remove('off'); }
+  else    { pill.textContent = 'Odmor';          pill.classList.add('off');    }
+  document.getElementById('content').innerHTML =
+    view === 'today' ? renderToday(now) : renderWeek(now);
+}
+
+// ═══════════════════════════════════════════════════════
+//  PWA
+// ═══════════════════════════════════════════════════════
+
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-btn').style.display = 'block';
+});
+
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('install-btn').style.display = 'none';
+  });
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+
+// Boot
+go(view);
+</script>
+</body>
+</html>
