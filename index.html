@@ -175,61 +175,50 @@
 //  Orange background in the original spreadsheet = opt:true
 // ═══════════════════════════════════════════════════════
 
+// Školska godina 2026/27 — Tjedan A od 7.9.2026, Tjedan B od 14.9.2026,
+// zatim naizmjence. Zimski odmor: tjedni 28.12. i 4.1. nisu u rasporedu.
 const WEEK_A = new Set([
-  '2025-09-08','2025-09-22','2025-10-06','2025-10-20',
-  '2025-11-03','2025-11-17','2025-12-01','2025-12-15',
-  '2026-01-26','2026-02-09','2026-02-23','2026-03-09',
-  '2026-03-23','2026-04-06','2026-04-20','2026-05-04',
-  '2026-05-18','2026-06-01','2026-06-15'
+  '2026-09-07','2026-09-21','2026-10-05','2026-10-19',
+  '2026-11-02','2026-11-16','2026-11-30','2026-12-14',
+  '2027-01-11','2027-01-25','2027-02-08','2027-02-22',
+  '2027-03-08','2027-03-22','2027-04-05','2027-04-19',
+  '2027-05-03','2027-05-17','2027-05-31','2027-06-14'
 ]);
 const WEEK_B = new Set([
-  '2025-09-15','2025-09-29','2025-10-13','2025-10-27',
-  '2025-11-10','2025-11-24','2025-12-08','2025-12-22',
-  '2026-01-19','2026-02-02','2026-02-16','2026-03-02',
-  '2026-03-16','2026-03-30','2026-04-13','2026-04-27',
-  '2026-05-11','2026-05-25','2026-06-08','2026-06-22'
+  '2026-09-14','2026-09-28','2026-10-12','2026-10-26',
+  '2026-11-09','2026-11-23','2026-12-07','2026-12-21',
+  '2027-01-18','2027-02-01','2027-02-15','2027-03-01',
+  '2027-03-15','2027-03-29','2027-04-12','2027-04-26',
+  '2027-05-10','2027-05-24','2027-06-07','2027-06-21'
 ]);
 
 // day: 1=Pon  2=Uto  3=Sri  4=Čet  5=Pet  6=Sub
+// type: 'A', 'B' ili 'AB' (oba tjedna)
 const ACTS = [
 
   // ══ TJEDAN A ════════════════════════════════════════
-  // Gitara – Sri 16:45–17:45  (starts 22.09.2025)
-  { type:'A', from:'2025-09-22', to:null,         day:3, name:'Gitara',    time:'16:45–17:45', color:'#10b981', opt:false },
+  // Gitara – Sri 15:00, Pet 16:00 (30 min, prije solfeggia)
+  { type:'A',  from:'2026-09-07', to:null, day:3, name:'Gitara',    time:'15:00–15:30', color:'#10b981', opt:false },
+  { type:'A',  from:'2026-09-07', to:null, day:5, name:'Gitara',    time:'16:00–16:30', color:'#10b981', opt:false },
 
-  // Solfeggio – Sub 11:00–12:00  (starts 22.09.2025)
-  { type:'A', from:'2025-09-22', to:null,         day:6, name:'Solfeggio', time:'11:00–12:00', color:'#8b5cf6', opt:false },
-
-  // Solfeggio – Pon 17:30–18:30  (starts 06.10.2025)
-  { type:'A', from:'2025-10-06', to:null,         day:1, name:'Solfeggio', time:'17:30–18:30', color:'#8b5cf6', opt:false },
-
-  // Ninđe – Čet 18:00–19:00  (20.10 – 03.11, NEOBAVEZNO)
-  { type:'A', from:'2025-10-20', to:'2026-11-03', day:4, name:'Ninđe',     time:'18:00–19:00', color:'#f59e0b', opt:true  },
-
-  // Košarka – Pon 19:10–20:30  (starts 15.12, NEOBAVEZNO)
-  { type:'A', from:'2025-12-15', to:null,         day:1, name:'Košarka',   time:'19:10–20:30', color:'#f97316', opt:true  },
-  // Košarka – Sri 19:10–20:30  (starts 15.12)
-  { type:'A', from:'2025-12-15', to:null,         day:3, name:'Košarka',   time:'19:10–20:30', color:'#f97316', opt:false },
-  // Košarka – Pet 19:10–20:30  (starts 15.12)
-  { type:'A', from:'2025-12-15', to:null,         day:5, name:'Košarka',   time:'19:10–20:30', color:'#f97316', opt:false },
+  // Solfeggio III C2 (Lara Knežević) – Pon i Sri 15:30–16:30
+  { type:'A',  from:'2026-09-07', to:null, day:1, name:'Solfeggio', time:'15:30–16:30', room:'soba 1',  color:'#8b5cf6', opt:false },
+  { type:'A',  from:'2026-09-07', to:null, day:3, name:'Solfeggio', time:'15:30–16:30', room:'soba 12', color:'#8b5cf6', opt:false },
 
   // ══ TJEDAN B ════════════════════════════════════════
-  // Solfeggio – Pon 17:15–18:15  (starts 29.09.2025)
-  { type:'B', from:'2025-09-29', to:null,         day:1, name:'Solfeggio', time:'17:15–18:15', color:'#8b5cf6', opt:false },
+  // Gitara – Pon 14:30, Sri 15:00 (30 min, prije solfeggia)
+  { type:'B',  from:'2026-09-07', to:null, day:1, name:'Gitara',    time:'14:30–15:00', color:'#10b981', opt:false },
+  { type:'B',  from:'2026-09-07', to:null, day:3, name:'Gitara',    time:'15:00–15:30', color:'#10b981', opt:false },
 
-  // Gitara – Pon 18:15–18:45  (starts 27.10.2025, after Solfeggio)
-  { type:'B', from:'2025-10-27', to:null,         day:1, name:'Gitara',    time:'18:15–18:45', color:'#10b981', opt:false },
+  // Solfeggio III C2 (Lara Knežević) – Pon i Sri 15:30–16:30
+  { type:'B',  from:'2026-09-07', to:null, day:1, name:'Solfeggio', time:'15:30–16:30', room:'soba 10', color:'#8b5cf6', opt:false },
+  { type:'B',  from:'2026-09-07', to:null, day:3, name:'Solfeggio', time:'15:30–16:30', room:'soba 12', color:'#8b5cf6', opt:false },
 
-  // Gitara – Čet 18:15–18:45  (starts 27.10.2025)
-  { type:'B', from:'2025-10-27', to:null,         day:4, name:'Gitara',    time:'18:15–18:45', color:'#10b981', opt:false },
-
-  // Solfeggio – Čet 18:45–19:45  (starts 24.11.2025, after Gitara)
-  { type:'B', from:'2025-11-24', to:null,         day:4, name:'Solfeggio', time:'18:45–19:45', color:'#8b5cf6', opt:false },
-
-  // Košarka – Sri 19:10–20:30  (starts 19.01.2026)
-  { type:'B', from:'2026-01-19', to:null,         day:3, name:'Košarka',   time:'19:10–20:30', color:'#f97316', opt:false },
-  // Košarka – Pet 19:10–20:30  (starts 19.01.2026)
-  { type:'B', from:'2026-01-19', to:null,         day:5, name:'Košarka',   time:'19:10–20:30', color:'#f97316', opt:false },
+  // ══ OBA TJEDNA ══════════════════════════════════════
+  // Košarka – Pon, Sri, Pet 19:15–20:30
+  { type:'AB', from:'2026-09-07', to:null, day:1, name:'Košarka',   time:'19:15–20:30', color:'#f97316', opt:false },
+  { type:'AB', from:'2026-09-07', to:null, day:3, name:'Košarka',   time:'19:15–20:30', color:'#f97316', opt:false },
+  { type:'AB', from:'2026-09-07', to:null, day:5, name:'Košarka',   time:'19:15–20:30', color:'#f97316', opt:false },
 
 ];
 
@@ -253,11 +242,11 @@ function weekType(date) {
 function actsFor(monISO, wtype, dayNum) {
   if (!wtype) return [];
   return ACTS.filter(a =>
-    a.type === wtype &&
+    (a.type === wtype || a.type === 'AB') &&
     monISO >= a.from &&
     (a.to === null || monISO <= a.to) &&
     a.day === dayNum
-  );
+  ).sort((a, b) => a.time.localeCompare(b.time));
 }
 function dayDate(monISO, d) {  // d: 1=Mon
   const dt = new Date(monISO + 'T00:00:00');
@@ -287,7 +276,7 @@ function cardHTML(a) {
       <div class="card-body">
         <div class="card-left">
           ${hasName ? `<div class="card-name">${a.name}</div>` : ''}
-          ${a.time ? `<div class="card-time${hasName ? '' : ' solo'}">${a.time}</div>` : ''}
+          ${a.time ? `<div class="card-time${hasName ? '' : ' solo'}">${a.time}${a.room ? ` · ${a.room}` : ''}</div>` : ''}
         </div>
         ${a.opt ? '<span class="opt-badge">neobavezno</span>' : ''}
       </div>

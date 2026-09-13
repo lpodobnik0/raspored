@@ -1,4 +1,4 @@
-const CACHE = 'raspored-v3';
+const CACHE = 'raspored-v4';
 const FILES = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
